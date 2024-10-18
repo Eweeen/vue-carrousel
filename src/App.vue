@@ -10,7 +10,8 @@ const slides = ref<Slide[]>([
   },
   {
     title: "Slide 2",
-    description: "Slide 2 description",
+    description:
+      "Slide 2 description fbhdj bfh dsfbhds jfb hdsjfdsb hjfk dsbhfj kds fbdsjk bh dsjkfds bhfkj dsf bhjdskf sh jdk dshbj fk bdsjkf dsf ijsd gyhdjs ",
     image: "https://picsum.photos/800/400?image=2",
   },
   {
@@ -22,19 +23,9 @@ const slides = ref<Slide[]>([
 </script>
 
 <template>
-  <section>
-    <h1>Vue Carousel</h1>
+  <div class="w-full h-screen bg-neutral-900 text-gray-200 p-12">
+    <h1 class="text-3xl font-semibold mb-6">Vue Carousel</h1>
 
-    <Carousel :slides />
-  </section>
+    <Carousel :slides :wrap-around="true" :touch-drag="false" />
+  </div>
 </template>
-
-<style>
-section {
-  padding: 40px;
-}
-
-section h1 {
-  margin-bottom: 32px;
-}
-</style>
