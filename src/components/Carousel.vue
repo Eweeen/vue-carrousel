@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from "lucide-vue-next";
-import { computed, onMounted, PropType, ref, useTemplateRef } from "vue";
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  PropType,
+  ref,
+  useTemplateRef,
+} from "vue";
 import { sleep } from "../utils/common";
+import { usePointerSwipe } from "@vueuse/core";
 
 export interface Slide {
   title: string;
@@ -42,15 +50,19 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  autoPlayInterval: {
+    type: Number,
+    default: 5000,
+  },
+  pauseAutoPlayOnHover: {
+    type: Boolean,
+    default: true,
+  },
   mouseDrag: {
     type: Boolean,
     default: true,
   },
   touchDrag: {
-    type: Boolean,
-    default: true,
-  },
-  pauseAutoPlayOnHover: {
     type: Boolean,
     default: true,
   },
@@ -76,8 +88,71 @@ const displayedSlides = computed<Record<number, Slide>>(() => {
   };
 });
 
+const interval = ref<number | undefined>(undefined);
+
 onMounted(() => {
   slideTo(props.modelValue);
+
+  if (props.autoPlay) {
+    interval.value = setInterval(() => {
+      next();
+    }, props.autoPlayInterval);
+
+    if (props.pauseAutoPlayOnHover && carousel.value) {
+      carousel.value.addEventListener("mouseenter", () => {
+        clearInterval(interval.value);
+      });
+
+      carousel.value.addEventListener("mouseleave", () => {
+        interval.value = setInterval(() => {
+          next();
+        }, props.autoPlayInterval);
+      });
+    }
+  }
+});
+
+onUnmounted(() => {
+  if (props.autoPlay) {
+    clearInterval(interval.value);
+
+    if (props.pauseAutoPlayOnHover && carousel.value) {
+      carousel.value.removeEventListener("mouseenter", () => {
+        clearInterval(interval.value);
+      });
+
+      carousel.value.removeEventListener("mouseleave", () => {
+        clearInterval(interval.value);
+      });
+    }
+  }
+});
+
+const { direction, distanceX } = usePointerSwipe(slidesRef, {
+  onSwipe() {
+    if (slidesRef.value) {
+      const slideValue = 100 / Object.keys(displayedSlides.value).length;
+      const translate = `translateX(-${
+        slideValue * (currentSlide.value + 1)
+      }%)`;
+
+      slidesRef.value.style.transition = "none";
+
+      if (direction.value === "right") {
+        const reverseSign = Math.sign(distanceX.value) * distanceX.value;
+        slidesRef.value.style.transform = `translateX(${reverseSign}px) ${translate}`;
+      } else {
+        slidesRef.value.style.transform = `translateX(-${distanceX.value}px) ${translate}`;
+      }
+    }
+  },
+  onSwipeEnd() {
+    if (direction.value === "left") {
+      next();
+    } else {
+      prev();
+    }
+  },
 });
 
 /**
@@ -92,6 +167,7 @@ function slideTo(index: number, transition: boolean = false): void {
     currentSlide.value = index; // Réassigne pour les cliques sur les points
 
     const translate = 100 / Object.keys(displayedSlides.value).length;
+    const indexToSlide = props.slides.length < 2 ? index : index + 1;
 
     if (transition) {
       slidesRef.value.style.transition = `transform ${props.transitionDuration}ms`;
@@ -100,7 +176,7 @@ function slideTo(index: number, transition: boolean = false): void {
     }
 
     slidesRef.value.style.transform = `translateX(-${
-      translate * (index + 1)
+      translate * indexToSlide
     }%)`;
   }
 }
@@ -182,7 +258,7 @@ async function goToLastSlide(): Promise<void> {
     <!-- Slides -->
     <div
       ref="slides"
-      class="flex items-center overflow-x-auto"
+      class="flex items-center overflow-x-auto select-none"
       :style="{ width: `${100 * Object.keys(displayedSlides).length}%` }"
     >
       <div
@@ -199,7 +275,7 @@ async function goToLastSlide(): Promise<void> {
     <!-- Chevron prev/next -->
     <div>
       <button
-        v-if="props.touchDrag && (props.wrapAround || currentSlide > 0)"
+        v-if="props.mouseDrag && (props.wrapAround || currentSlide > 0)"
         class="absolute top-1/2 left-3 -translate-y-1/2 cursor-pointer bg-transparent border-none outline-none"
         @click="prev()"
       >
@@ -207,7 +283,7 @@ async function goToLastSlide(): Promise<void> {
       </button>
       <button
         v-if="
-          props.touchDrag &&
+          props.mouseDrag &&
           (props.wrapAround || currentSlide < props.slides.length - 1)
         "
         class="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer bg-transparent border-none outline-none"

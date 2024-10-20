@@ -26,6 +26,11 @@ const slides = ref<Slide[]>([
   <div class="w-full h-screen bg-neutral-900 text-gray-200 p-12">
     <h1 class="text-3xl font-semibold mb-6">Vue Carousel</h1>
 
-    <Carousel :slides :wrap-around="true" :touch-drag="false" />
+    <Carousel
+      :slides
+      :wrap-around="true"
+      :auto-play="true"
+      :mouse-drag="false"
+    />
   </div>
 </template>
