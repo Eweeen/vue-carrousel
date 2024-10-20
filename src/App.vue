@@ -20,14 +20,18 @@ const slides = ref<Slide[]>([
 </script>
 
 <template>
-  <div class="w-full h-screen bg-neutral-900 text-gray-200 p-12">
+  <div
+    class="w-full h-screen bg-gray-100 text-gray-800 dark:bg-neutral-900 dark:text-gray-100 p-12"
+  >
     <h1 class="text-3xl font-semibold mb-6">Vue Carousel</h1>
 
-    <Carousel
-      :slides
-      :wrap-around="false"
-      :auto-play="true"
-      :arrow-keys="false"
-    />
+    <Carousel :slides :wrap-around="true" :auto-play="true" :arrow-keys="true">
+      <template #slide="{ s }">
+        <div class="p-11 text-center select-none">
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.description }}</p>
+        </div>
+      </template>
+    </Carousel>
   </div>
 </template>

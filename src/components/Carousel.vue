@@ -27,17 +27,17 @@ const props = defineProps({
   /**
    * Nombre de slides à afficher
    */
-  itemsToShow: {
-    type: Number,
-    default: 1,
-  },
+  // itemsToShow: {
+  //   type: Number,
+  //   default: 1,
+  // },
   /**
    * Nombre de slides à scroller
    */
-  itemsToScroll: {
-    type: Number,
-    default: 1,
-  },
+  // itemsToScroll: {
+  //   type: Number,
+  //   default: 1,
+  // },
   /**
    * Slides à afficher
    */
@@ -320,7 +320,7 @@ async function goToLastSlide(): Promise<void> {
 <template>
   <div
     ref="carousel"
-    class="relative w-full max-w-[800px] mx-auto bg-neutral-800 rounded-lg overflow-hidden"
+    class="relative w-full max-w-[800px] mx-auto overflow-hidden"
   >
     <!-- Slides -->
     <div
@@ -334,7 +334,7 @@ async function goToLastSlide(): Promise<void> {
         :style="{ width: `${100 / Object.keys(displayedSlides).length}%` }"
       >
         <slot name="slide" :s="s">
-          <div class="p-11 bg-neutral-800 text-center select-none">
+          <div class="p-11 text-center select-none">
             <h3>{{ s.title }}</h3>
             <p>{{ s.description }}</p>
           </div>
@@ -370,8 +370,12 @@ async function goToLastSlide(): Promise<void> {
           v-for="(_s, index) of slides"
           :key="index"
           :class="[
-            'w-2 h-2 mx-1 bg-gray-100 rounded-full cursor-pointer',
-            { 'bg-neutral-700 border border-gray-100': index === currentSlide },
+            'w-2 h-2 mx-1 rounded-full cursor-pointer',
+            [
+              index === currentSlide
+                ? 'bg-gray-100 border border-neutral-700 dark:bg-neutral-700 dark:border-gray-100'
+                : 'bg-neutral-700 dark:bg-gray-100',
+            ],
           ]"
           @click="slideTo(index, true)"
         ></span>
