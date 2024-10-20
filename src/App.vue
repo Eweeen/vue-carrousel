@@ -6,18 +6,15 @@ const slides = ref<Slide[]>([
   {
     title: "Slide 1",
     description: "Slide 1 description",
-    image: "https://picsum.photos/800/400?image=1",
   },
   {
     title: "Slide 2",
     description:
       "Slide 2 description fbhdj bfh dsfbhds jfb hdsjfdsb hjfk dsbhfj kds fbdsjk bh dsjkfds bhfkj dsf bhjdskf sh jdk dshbj fk bdsjkf dsf ijsd gyhdjs ",
-    image: "https://picsum.photos/800/400?image=2",
   },
   {
     title: "Slide 3",
     description: "Slide 3 description",
-    image: "https://picsum.photos/800/400?image=3",
   },
 ]);
 </script>
@@ -28,9 +25,9 @@ const slides = ref<Slide[]>([
 
     <Carousel
       :slides
-      :wrap-around="true"
+      :wrap-around="false"
       :auto-play="true"
-      :mouse-drag="false"
+      :arrow-keys="false"
     />
   </div>
 </template>

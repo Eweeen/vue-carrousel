@@ -14,54 +14,82 @@ import { usePointerSwipe } from "@vueuse/core";
 export interface Slide {
   title: string;
   description: string;
-  image: string;
 }
 
 const props = defineProps({
+  /**
+   * Position par défaut du carousel
+   */
   modelValue: {
     type: Number,
     default: 0,
   },
+  /**
+   * Nombre de slides à afficher
+   */
   itemsToShow: {
     type: Number,
     default: 1,
   },
+  /**
+   * Nombre de slides à scroller
+   */
   itemsToScroll: {
     type: Number,
     default: 1,
   },
+  /**
+   * Slides à afficher
+   */
   slides: {
-    type: Array as PropType<Slide[]>,
+    type: Array as PropType<any[]>,
     default: () => [],
   },
-  title: {
-    type: String,
-    default: "",
-  },
+  /**
+   * Active ou non l'effet de boucle
+   */
   wrapAround: {
     type: Boolean,
     default: false,
   },
+  /**
+   * Durée de la transition
+   */
   transitionDuration: {
     type: Number,
     default: 300,
   },
+  /**
+   * Active ou non le défilement automatique
+   */
   autoPlay: {
     type: Boolean,
     default: false,
   },
+  /**
+   * Intervalle de temps entre chaque slide
+   */
   autoPlayInterval: {
     type: Number,
     default: 5000,
   },
+  /**
+   * Active ou non la pause du défilement automatique au survol
+   */
   pauseAutoPlayOnHover: {
     type: Boolean,
     default: true,
   },
-  mouseDrag: {
+  /**
+   * Active ou non la navigation au clavier
+   */
+  arrowKeys: {
     type: Boolean,
     default: true,
   },
+  /**
+   * Active ou non le swipe
+   */
   touchDrag: {
     type: Boolean,
     default: true,
@@ -75,6 +103,15 @@ const currentSlide = ref<number>(0);
 const displayedSlides = computed<Record<number, Slide>>(() => {
   if (props.slides.length < 2) {
     return { 0: props.slides[0] };
+  }
+
+  if (!props.wrapAround) {
+    return {
+      ...props.slides.reduce((acc, s, index) => {
+        acc[index] = s;
+        return acc;
+      }, {} as Record<number, Slide>),
+    };
   }
 
   // Ajoute les slides de début et de fin pour l'effet de boucle
@@ -132,9 +169,11 @@ const { direction, distanceX } = usePointerSwipe(slidesRef, {
   onSwipe() {
     if (slidesRef.value) {
       const slideValue = 100 / Object.keys(displayedSlides.value).length;
-      const translate = `translateX(-${
-        slideValue * (currentSlide.value + 1)
-      }%)`;
+      const indexToSlide =
+        props.slides.length < 2 || !props.wrapAround
+          ? currentSlide.value
+          : currentSlide.value + 1;
+      const translate = `translateX(-${slideValue * indexToSlide}%)`;
 
       slidesRef.value.style.transition = "none";
 
@@ -167,7 +206,8 @@ function slideTo(index: number, transition: boolean = false): void {
     currentSlide.value = index; // Réassigne pour les cliques sur les points
 
     const translate = 100 / Object.keys(displayedSlides.value).length;
-    const indexToSlide = props.slides.length < 2 ? index : index + 1;
+    const indexToSlide =
+      props.slides.length < 2 || !props.wrapAround ? index : index + 1;
 
     if (transition) {
       slidesRef.value.style.transition = `transform ${props.transitionDuration}ms`;
@@ -253,8 +293,6 @@ async function goToLastSlide(): Promise<void> {
     ref="carousel"
     class="relative w-full max-w-[800px] mx-auto bg-neutral-800 rounded-lg overflow-hidden"
   >
-    <h2 class="text-2xl">{{ title }}</h2>
-
     <!-- Slides -->
     <div
       ref="slides"
@@ -264,18 +302,21 @@ async function goToLastSlide(): Promise<void> {
       <div
         v-for="(s, index) of displayedSlides"
         :key="index"
-        class="p-11 bg-neutral-800 text-center"
         :style="{ width: `${100 / Object.keys(displayedSlides).length}%` }"
       >
-        <h3>{{ s.title }}</h3>
-        <p>{{ s.description }}</p>
+        <slot name="slide" :s="s">
+          <div class="p-11 bg-neutral-800 text-center select-none">
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.description }}</p>
+          </div>
+        </slot>
       </div>
     </div>
 
     <!-- Chevron prev/next -->
     <div>
       <button
-        v-if="props.mouseDrag && (props.wrapAround || currentSlide > 0)"
+        v-if="props.arrowKeys && (props.wrapAround || currentSlide > 0)"
         class="absolute top-1/2 left-3 -translate-y-1/2 cursor-pointer bg-transparent border-none outline-none"
         @click="prev()"
       >
@@ -283,7 +324,7 @@ async function goToLastSlide(): Promise<void> {
       </button>
       <button
         v-if="
-          props.mouseDrag &&
+          props.arrowKeys &&
           (props.wrapAround || currentSlide < props.slides.length - 1)
         "
         class="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer bg-transparent border-none outline-none"
@@ -294,8 +335,8 @@ async function goToLastSlide(): Promise<void> {
     </div>
 
     <!-- Addons slot -->
-    <slot name="addons">
-      <div class="absolute bottom-0 w-full flex justify-center gap-2 pt-4 pb-2">
+    <slot name="addons" :slides>
+      <div class="w-full flex justify-center gap-2 pb-4">
         <span
           v-for="(_s, index) of slides"
           :key="index"
