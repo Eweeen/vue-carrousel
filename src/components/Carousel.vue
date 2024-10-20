@@ -100,6 +100,11 @@ const carousel = useTemplateRef<HTMLDivElement>("carousel");
 const slidesRef = useTemplateRef<HTMLDivElement>("slides");
 
 const currentSlide = ref<number>(0);
+const interval = ref<number | undefined>(undefined);
+
+/**
+ * Définit les slides à afficher par rapport à l'effet de boucle et au nombre de slides
+ */
 const displayedSlides = computed<Record<number, Slide>>(() => {
   if (props.slides.length < 2) {
     return { 0: props.slides[0] };
@@ -125,25 +130,34 @@ const displayedSlides = computed<Record<number, Slide>>(() => {
   };
 });
 
-const interval = ref<number | undefined>(undefined);
-
 onMounted(() => {
   slideTo(props.modelValue);
 
   if (props.autoPlay) {
-    interval.value = setInterval(() => {
+    // Défilement automatique
+    const intervalFunc = () => {
+      const isLastSlide = currentSlide.value === props.slides.length - 1;
+
+      if (!props.wrapAround && isLastSlide) {
+        clearInterval(interval.value);
+        return;
+      }
+
       next();
-    }, props.autoPlayInterval);
+    };
+
+    // Démarre le défilement automatique
+    interval.value = setInterval(intervalFunc, props.autoPlayInterval);
 
     if (props.pauseAutoPlayOnHover && carousel.value) {
+      // Pause du défilement automatique au survol
       carousel.value.addEventListener("mouseenter", () => {
         clearInterval(interval.value);
       });
 
+      // Redémarre le défilement automatique
       carousel.value.addEventListener("mouseleave", () => {
-        interval.value = setInterval(() => {
-          next();
-        }, props.autoPlayInterval);
+        interval.value = setInterval(intervalFunc, props.autoPlayInterval);
       });
     }
   }
@@ -167,28 +181,43 @@ onUnmounted(() => {
 
 const { direction, distanceX } = usePointerSwipe(slidesRef, {
   onSwipe() {
-    if (slidesRef.value) {
+    if (slidesRef.value && props.touchDrag && props.wrapAround) {
+      // Valeur de déplacement d'une slide
       const slideValue = 100 / Object.keys(displayedSlides.value).length;
-      const indexToSlide =
-        props.slides.length < 2 || !props.wrapAround
-          ? currentSlide.value
-          : currentSlide.value + 1;
+      // Si on peut boucler
+      const wrap = props.slides.length > 1 || props.wrapAround;
+      // Index de la slide
+      const indexToSlide = wrap ? currentSlide.value + 1 : currentSlide.value;
+      // Déplacement du carousel
       const translate = `translateX(-${slideValue * indexToSlide}%)`;
 
       slidesRef.value.style.transition = "none";
 
       if (direction.value === "right") {
+        // Inverse le signe pour le swipe vers la droite
         const reverseSign = Math.sign(distanceX.value) * distanceX.value;
         slidesRef.value.style.transform = `translateX(${reverseSign}px) ${translate}`;
       } else {
+        // Swipe vers la gauche
         slidesRef.value.style.transform = `translateX(-${distanceX.value}px) ${translate}`;
       }
     }
   },
   onSwipeEnd() {
-    if (direction.value === "left") {
+    const right = direction.value === "right";
+    const left = direction.value === "left";
+
+    const isStart = currentSlide.value === 0 && right;
+    const isEnd = currentSlide.value === props.slides.length - 1 && left;
+
+    // Si il n'y a pas d'effet de boucle et qu'on est à la première ou dernière slide, on ne fait rien
+    if ((isStart || isEnd) && !props.wrapAround) {
+      return;
+    }
+
+    if (left) {
       next();
-    } else {
+    } else if (right) {
       prev();
     }
   },
@@ -225,7 +254,7 @@ function slideTo(index: number, transition: boolean = false): void {
  * Slide suivante
  */
 function next(): void {
-  // Retour à la première slide
+  // Si on est à la dernière slide, on retourne à la première
   if (currentSlide.value === props.slides.length - 1) {
     goToFirstSlide();
     return;
@@ -245,7 +274,7 @@ function next(): void {
  * Slide précédente
  */
 function prev(): void {
-  // Retour à la dernière slide
+  // Si on est à la première slide, on retourne à la dernière
   if (currentSlide.value === 0) {
     goToLastSlide();
     return;
