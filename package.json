@@ -1,8 +1,37 @@
 {
-  "name": "vue-carousel",
-  "private": true,
-  "version": "0.0.0",
+  "name": "vue3-carrousel",
+  "private": false,
+  "version": "1.0.1",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eweeen/vue3-carrousel.git"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "vite",
+    "carrousel",
+    "slider",
+    "carousel"
+  ],
+  "files": [
+    "dist",
+    "src/components/"
+  ],
+  "main": "./dist/vue3-carrousel.umd.cjs",
+  "module": "./dist/vue3-carrousel.js",
+  "exports": {
+    ".": {
+      "import": "./dist/vue3-carrousel.js",
+      "require": "./dist/vue3-carrousel.umd.cjs"
+    },
+    "./dist/style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
+    }
+  },
+  "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
@@ -13,7 +42,11 @@
     "lucide-vue-next": "^0.453.0",
     "vue": "^3.5.10"
   },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
   "devDependencies": {
+    "@types/node": "^22.7.8",
     "@vitejs/plugin-vue": "^5.1.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
