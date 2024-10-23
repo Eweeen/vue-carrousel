@@ -11,11 +11,6 @@ import {
 import { sleep } from "../utils/common";
 import { usePointerSwipe } from "@vueuse/core";
 
-export interface Slide {
-  title: string;
-  description: string;
-}
-
 const props = defineProps({
   /**
    * Position par défaut du carousel
@@ -105,7 +100,7 @@ const interval = ref<number | undefined>(undefined);
 /**
  * Définit les slides à afficher par rapport à l'effet de boucle et au nombre de slides
  */
-const displayedSlides = computed<Record<number, Slide>>(() => {
+const displayedSlides = computed<Record<number, any>>(() => {
   if (props.slides.length < 2) {
     return { 0: props.slides[0] };
   }
@@ -115,7 +110,7 @@ const displayedSlides = computed<Record<number, Slide>>(() => {
       ...props.slides.reduce((acc, s, index) => {
         acc[index] = s;
         return acc;
-      }, {} as Record<number, Slide>),
+      }, {} as Record<number, any>),
     };
   }
 
@@ -125,13 +120,13 @@ const displayedSlides = computed<Record<number, Slide>>(() => {
     ...props.slides.reduce((acc, s, index) => {
       acc[index + 1] = s;
       return acc;
-    }, {} as Record<number, Slide>),
+    }, {} as Record<number, any>),
     [props.slides.length + 1]: props.slides[0],
   };
 });
 
 onMounted(() => {
-  slideTo(props.modelValue);
+  slideTo(props.modelValue, false);
 
   if (props.autoPlay) {
     // Défilement automatique
@@ -230,7 +225,7 @@ const { direction, distanceX } = usePointerSwipe(slidesRef, {
  * @param {boolean} transition - Transition ou non
  * @returns {void}
  */
-function slideTo(index: number, transition: boolean = false): void {
+function slideTo(index: number, transition: boolean = true): void {
   if (slidesRef.value) {
     currentSlide.value = index; // Réassigne pour les cliques sur les points
 
@@ -267,7 +262,7 @@ function next(): void {
     currentSlide.value = 0;
   }
 
-  slideTo(currentSlide.value, true);
+  slideTo(currentSlide.value);
 }
 
 /**
@@ -287,7 +282,7 @@ function prev(): void {
     currentSlide.value = props.slides.length - 1;
   }
 
-  slideTo(currentSlide.value, true);
+  slideTo(currentSlide.value);
 }
 
 /**
@@ -296,7 +291,7 @@ function prev(): void {
 async function goToFirstSlide(): Promise<void> {
   currentSlide.value++;
 
-  slideTo(currentSlide.value, true);
+  slideTo(currentSlide.value);
   currentSlide.value = 0;
 
   await sleep(props.transitionDuration);
@@ -309,12 +304,19 @@ async function goToFirstSlide(): Promise<void> {
 async function goToLastSlide(): Promise<void> {
   currentSlide.value--;
 
-  slideTo(currentSlide.value, true);
+  slideTo(currentSlide.value);
   currentSlide.value = props.slides.length - 1;
 
   await sleep(props.transitionDuration);
   slideTo(currentSlide.value, false);
 }
+
+defineExpose({
+  next,
+  prev,
+  slideTo,
+  currentSlide,
+});
 </script>
 
 <template>
@@ -335,8 +337,7 @@ async function goToLastSlide(): Promise<void> {
       >
         <slot name="slide" :s="s">
           <div class="p-11 text-center select-none">
-            <h3>{{ s.title }}</h3>
-            <p>{{ s.description }}</p>
+            <p>{{ s }}</p>
           </div>
         </slot>
       </div>

@@ -1,21 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import Carousel, { Slide } from "./components/Carousel.vue";
+import Carousel from "./components/Carousel.vue";
 
-const slides = ref<Slide[]>([
-  {
-    title: "Slide 1",
-    description: "Slide 1 description",
-  },
-  {
-    title: "Slide 2",
-    description:
-      "Slide 2 description fbhdj bfh dsfbhds jfb hdsjfdsb hjfk dsbhfj kds fbdsjk bh dsjkfds bhfkj dsf bhjdskf sh jdk dshbj fk bdsjkf dsf ijsd gyhdjs ",
-  },
-  {
-    title: "Slide 3",
-    description: "Slide 3 description",
-  },
+const slides = ref<string[]>([
+  "Slide 1 description",
+  "Slide 2 description fbhdj bfh dsfbhds jfb hdsjfdsb hjfk dsbhfj kds fbdsjk bh dsjkfds bhfkj dsf bhjdskf sh jdk dshbj fk bdsjkf dsf ijsd gyhdjs ",
+  "Slide 3 description",
 ]);
 </script>
 
@@ -28,8 +18,7 @@ const slides = ref<Slide[]>([
     <Carousel :slides :wrap-around="true" :auto-play="true" :arrow-keys="true">
       <template #slide="{ s }">
         <div class="p-11 text-center select-none">
-          <h3>{{ s.title }}</h3>
-          <p>{{ s.description }}</p>
+          <p>{{ s }}</p>
         </div>
       </template>
     </Carousel>
